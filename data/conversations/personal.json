@@ -1,0 +1,26 @@
+{
+  "3d4b5b77c8ea": {
+    "id": "3d4b5b77c8ea",
+    "title": "can you tell me about pdf export issue ?",
+    "created_at": "2026-03-23T12:20:28.829158",
+    "updated_at": "2026-03-23T12:22:15.079587",
+    "messages": [
+      {
+        "role": "user",
+        "content": "can you tell me about pdf export issue ?",
+        "sources": [],
+        "not_found": false,
+        "ts": "2026-03-23T12:22:02.253074"
+      },
+      {
+        "role": "assistant",
+        "content": "## PDF Export Issue Overview\n\nThe **PDF export issue** arises after upgrading to **Puppeteer** from **Phantom**. Users have reported encountering an exception trace stating \"Error in Exporting Data\" along with server log traces. The primary reasons for this issue include:\n\n1. The **server** does not have an **Internet connection** to download **Chromium**.\n2. The server blocks access to the following URLs:\n   - `https://storage.googleapis.com/`\n   - `https://npmmirror.com/`\n\n## Steps to Resolve the Issue\n\nTo resolve the PDF export issue, follow these steps:\n\n1. **Download Executable Files**:\n   - Download the appropriate **pdfexport** executable files from the provided link.\n   - Extract the file contents into the directory: `/ServiceDesk/custom/pdffolder/`.\n   - Ensure to replace all existing files.\n\n2. **Run the Executable**:\n   - Navigate to the `/ServiceDesk/custom/pdffolder` directory.\n   - Execute the following commands based on your operating system:\n\n   **For Windows**:\n   ```bash\n   pdfexport-win.exe \"{\\\"options\\\":{\\\"init\\\":true,\\\"revision\\\":\\\"1370400\\\"}}\"\n   ```\n\n   **For Linux**:\n   ```bash\n   ./pdfexport-linux \"{\\\"options\\\":{\\\"init\\\":true,\\\"revision\\\":\\\"1370449\\\"}}\"\n   ```\n\n3. **Check for Success Message**:\n   - You should receive a success message that includes the new **Chromium executable path** and a `.pcr_stats.json` file.\n\n4. **Test PDF Export**:\n   - After completing the above steps, attempt to export the reports again to verify if the issue has been resolved.\n\n## Additional Note\n\n- Ensure that the **Alias URL** in **Admin > Advanced Portal Settings** is accessible from the server. \n\nFor more details, you can refer to the article on [ManageEngine Pitstop](https://pitstop.manageengine.com/portal/en/kb/articles/pdf-export-issue-after-puppetter).",
+        "sources": [
+          "pdf-export-issue-after-puppetter.pdf"
+        ],
+        "not_found": false,
+        "ts": "2026-03-23T12:22:15.079587"
+      }
+    ]
+  }
+}

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG System - Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+        }
+        
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            color: #10a37f;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #e5e5ea;
+        }
+        
+        .tab-button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: none;
+            color: #999;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+        
+        .tab-button.active {
+            color: #10a37f;
+            border-bottom-color: #10a37f;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: #fff;
+        }
+        
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="email"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #10a37f;
+            box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.1);
+        }
+        
+        .error {
+            color: #d32f2f;
+            font-size: 13px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #ffebee;
+            border-radius: 8px;
+            border-left: 3px solid #d32f2f;
+        }
+        
+        .success {
+            color: #2e7d32;
+            font-size: 13px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            border-left: 3px solid #2e7d32;
+        }
+        
+        .form-actions {
+            margin-top: 20px;
+        }
+        
+        button[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background: #10a37f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        button[type="submit"]:hover {
+            background: #0e9670;
+        }
+        
+        button[type="submit"]:active {
+            background: #0d8a6a;
+        }
+        
+        .hint {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .hint a {
+            color: #10a37f;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .hint a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            .card {
+                padding: 24px;
+            }
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <div class="header">
+            <h1>🤖 RAG System</h1>
+            <p>Knowledge Base Chat</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('login')">Login</button>
+            <button class="tab-button" onclick="switchTab('register')">Create Account</button>
+        </div>
+        
+        <!-- LOGIN TAB -->
+        <div id="login" class="tab-content active">
+            {% if error and not show_register %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+            
+            <form method="post" action="/login">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" placeholder="Enter your username" required autofocus />
+                </div>
+                
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="Enter your password" required />
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit">Sign In</button>
+                </div>
+                
+                <div class="hint">
+                    Demo: admin / admin123
+                </div>
+            </form>
+        </div>
+        
+        <!-- REGISTER TAB -->
+        <div id="register" class="tab-content">
+            {% if error and show_register %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+            
+            <form method="post" action="/register">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" placeholder="Choose a username (min 3 characters)" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="Create a password (min 6 characters)" required />
+                </div>
+                
+                <div class="form-group">
+                    <label>Department</label>
+                    <select name="role" required>
+                        <option value="">Select your department</option>
+                        <option value="engineering">Engineering</option>
+                        <option value="hr">Human Resources</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit">Create Account</button>
+                </div>
+                
+                <div class="hint">
+                    Already have an account? <a onclick="switchTab('login')">Sign In</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchTab(tab) {
+    // Hide all tabs
+    document.getElementById('login').classList.remove('active');
+    document.getElementById('register').classList.remove('active');
+    
+    // Remove active state from all buttons
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tab).classList.add('active');
+    
+    // Mark button as active
+    event.target.classList.add('active');
+}
+
+// Show register tab if there was an error there
+document.addEventListener('DOMContentLoaded', function() {
+    const showRegister = "{{ show_register }}" === "True";
+    if (showRegister) {
+        switchTab('register');
+    }
+});
+</script>
+
+</body>
+</html>

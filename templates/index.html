@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RAG Chat System</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{height:100%;background:#f7f8fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#333;}
+    /* ── Layout ──────────────────────────────────────────── */
+    .app{display:flex;flex-direction:column;height:100vh;}
+    .header{background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+    .brand{font-size:18px;font-weight:700;color:#10a37f;display:flex;align-items:center;gap:8px;}
+    .brand-icon{font-size:22px;}
+    .header-right{display:flex;align-items:center;gap:14px;}
+    .user-chip{display:flex;align-items:center;gap:8px;}
+    .avatar{width:34px;height:34px;border-radius:50%;background:#10a37f;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;}
+    .user-info-text{display:flex;flex-direction:column;}
+    .user-name{font-weight:600;font-size:13px;}
+    .user-role{font-size:11px;color:#999;}
+    /* ── Company bar ─────────────────────────────────────── */
+    .company-bar{background:#fff;border-bottom:1px solid #e0e0e0;padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+    .company-bar label{font-size:13px;font-weight:600;white-space:nowrap;}
+    .company-select{flex:1;max-width:280px;padding:7px 10px;border:1px solid #d0d0d0;border-radius:7px;font-size:13px;background:#fff;}
+    .company-select:focus{outline:none;border-color:#10a37f;}
+    .btn-new-company{padding:7px 14px;background:#10a37f;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;}
+    .btn-new-company:hover{background:#0d8a6b;}
+    .company-badge{font-size:11px;padding:3px 10px;background:#e8f5e9;color:#2e7d32;border-radius:20px;font-weight:600;}
+    .company-index-badge{font-size:11px;padding:3px 10px;background:#e3f2fd;color:#1565c0;border-radius:20px;font-weight:600;}
+    /* ── Main area ───────────────────────────────────────── */
+    .main{display:flex;flex:1;overflow:hidden;}
+    /* ── Sidebar ─────────────────────────────────────────── */
+    .sidebar{width:280px;background:#fff;border-right:1px solid #e0e0e0;display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;}
+    .sidebar-section{padding:14px 16px;border-bottom:1px solid #f0f0f0;}
+    .sidebar-section h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#888;margin-bottom:10px;}
+    /* Files */
+    .files-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;}
+    .file-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#f7f8fa;border-radius:8px;font-size:12px;gap:6px;}
+    .file-item-left{display:flex;align-items:center;gap:7px;min-width:0;}
+    .file-icon{font-size:16px;flex-shrink:0;}
+    .file-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
+    .file-size{color:#999;font-size:10px;white-space:nowrap;}
+    .file-actions{display:flex;gap:4px;flex-shrink:0;}
+    .btn-xs{padding:3px 8px;font-size:11px;border:none;border-radius:5px;cursor:pointer;}
+    .btn-xs-view{background:#e3f2fd;color:#1565c0;}
+    .btn-xs-del{background:#fce4ec;color:#c62828;}
+    .btn-xs-view:hover{background:#bbdefb;}
+    .btn-xs-del:hover{background:#ef9a9a;}
+    /* Upload */
+    .drop-zone{border:2px dashed #d0d0d0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
+    .drop-zone:hover,.drop-zone.drag-over{border-color:#10a37f;background:#f0fdf8;}
+    .drop-zone-text{font-size:12px;color:#666;pointer-events:none;}
+    .drop-zone-sub{font-size:10px;color:#aaa;margin-top:4px;pointer-events:none;}
+    .file-types-badge{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+    .ft-badge{font-size:10px;padding:2px 6px;background:#f0f0f0;border-radius:4px;color:#555;}
+    #upload-input{display:none;}
+    .btn-upload{width:100%;padding:9px;background:#10a37f;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;}
+    .btn-upload:hover{background:#0d8a6b;}
+    .btn-upload:disabled{background:#a5d6c9;cursor:not-allowed;}
+    /* Web scraping */
+    .url-input{width:100%;padding:8px 10px;border:1px solid #d0d0d0;border-radius:8px;font-size:12px;margin-bottom:8px;}
+    .url-input:focus{outline:none;border-color:#10a37f;}
+    .scrape-options{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+    .scrape-options select,.scrape-options input{padding:6px 8px;border:1px solid #d0d0d0;border-radius:7px;font-size:12px;}
+    .scrape-options input[type=number]{width:60px;}
+    .depth-label{font-size:11px;color:#666;white-space:nowrap;}
+    .btn-scrape{width:100%;padding:9px;background:#1565c0;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+    .btn-scrape:hover{background:#0d47a1;}
+    .btn-scrape:disabled{background:#90caf9;cursor:not-allowed;}
+    /* API ingest */
+    .api-form{display:flex;flex-direction:column;gap:6px;}
+    .api-form input,.api-form select,.api-form textarea{padding:7px 10px;border:1px solid #d0d0d0;border-radius:7px;font-size:12px;font-family:inherit;}
+    .api-form input:focus,.api-form select:focus,.api-form textarea:focus{outline:none;border-color:#10a37f;}
+    .api-form textarea{resize:vertical;min-height:50px;}
+    .btn-api{width:100%;padding:9px;background:#6a1b9a;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+    .btn-api:hover{background:#4a148c;}
+    .btn-api:disabled{background:#ce93d8;cursor:not-allowed;}
+    /* ── Chat area ───────────────────────────────────────── */
+    .chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+    .chat-messages{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px;}
+    .welcome-msg{text-align:center;padding:36px 20px;color:#999;}
+    .welcome-msg h2{font-size:22px;color:#333;margin-bottom:8px;}
+    .welcome-msg p{font-size:14px;max-width:500px;margin:0 auto;}
+    /* Messages */
+    .msg{display:flex;gap:12px;align-items:flex-start;max-width:780px;}
+    .msg.user{flex-direction:row-reverse;margin-left:auto;}
+    .msg-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;}
+    .msg.user .msg-avatar{background:#10a37f;color:#fff;}
+    .msg.assistant .msg-avatar{background:#f0f0f0;color:#333;}
+    .msg-bubble{padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.6;max-width:640px;}
+    .msg.user .msg-bubble{background:#10a37f;color:#fff;border-top-right-radius:4px;}
+    .msg.assistant .msg-bubble{background:#fff;border:1px solid #e8e8e8;border-top-left-radius:4px;}
+    .msg-sources{margin-top:8px;font-size:11px;color:#888;}
+    .msg-sources span{display:inline-block;padding:2px 8px;background:#f5f5f5;border-radius:4px;margin:2px 2px 0;}
+    /* Typing */
+    .typing{display:none;}
+    .typing.visible{display:flex;}
+    .typing-dots{display:flex;gap:4px;padding:10px 12px;background:#fff;border:1px solid #e8e8e8;border-radius:14px;}
+    .typing-dots span{width:7px;height:7px;background:#ccc;border-radius:50%;animation:bounce .8s infinite;}
+    .typing-dots span:nth-child(2){animation-delay:.15s;}
+    .typing-dots span:nth-child(3){animation-delay:.3s;}
+    @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+    /* Streaming cursor */
+    .stream-cursor::after{content:'▋';display:inline-block;animation:blink .7s steps(1) infinite;margin-left:1px;color:#10a37f;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:0;}}
+    /* Input bar */
+    .input-bar{padding:14px 20px;background:#fff;border-top:1px solid #e0e0e0;display:flex;align-items:center;gap:10px;}
+    .input-bar textarea{flex:1;padding:10px 14px;border:1px solid #d0d0d0;border-radius:10px;font-size:14px;resize:none;height:44px;line-height:1.5;font-family:inherit;}
+    .input-bar textarea:focus{outline:none;border-color:#10a37f;}
+    .btn-send{padding:10px 20px;background:#10a37f;color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600;height:44px;}
+    .btn-send:hover{background:#0d8a6b;}
+    .btn-send:disabled{background:#a5d6c9;cursor:not-allowed;}
+    .btn-clear{padding:10px 14px;background:#f0f0f0;color:#555;border:none;border-radius:10px;cursor:pointer;font-size:13px;height:44px;}
+    .btn-clear:hover{background:#e0e0e0;}
+    /* ── Toast / Status ──────────────────────────────────── */
+    .toast{position:fixed;bottom:28px;right:28px;background:#333;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:380px;}
+    .toast.show{opacity:1;}
+    .toast.success{background:#2e7d32;}
+    .toast.error{background:#c62828;}
+    .toast.info{background:#1565c0;}
+    /* Progress bar */
+    .progress-bar{height:3px;background:#10a37f;width:0;transition:width .4s;position:fixed;top:0;left:0;z-index:9999;}
+    /* Upload progress */
+    .upload-status{font-size:12px;color:#666;margin-top:6px;min-height:16px;}
+    /* ── Company modal ───────────────────────────────────── */
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;}
+    .modal-bg.open{display:flex;}
+    .modal{background:#fff;border-radius:14px;padding:28px;width:380px;max-width:90vw;}
+    .modal h2{font-size:18px;margin-bottom:18px;}
+    .modal input{width:100%;padding:10px 12px;border:1px solid #d0d0d0;border-radius:8px;font-size:14px;margin-bottom:14px;}
+    .modal input:focus{outline:none;border-color:#10a37f;}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+    .btn-modal-cancel{padding:9px 18px;background:#f0f0f0;border:none;border-radius:8px;cursor:pointer;font-size:13px;}
+    .btn-modal-ok{padding:9px 18px;background:#10a37f;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;}
+    /* hint */
+    .no-company-hint{background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 14px;font-size:12px;color:#856404;margin-bottom:8px;display:none;}
+    .no-company-hint.show{display:block;}
+    /* ── History Panel (ChatGPT-style left sidebar) ──────────────── */
+    .history-panel{width:220px;background:#171717;display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+    .history-top{padding:10px 10px 8px;border-bottom:1px solid #2a2a2a;}
+    .btn-new-chat{width:100%;padding:10px 12px;background:transparent;color:#ececec;border:1px solid #3a3a3a;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;text-align:left;display:flex;align-items:center;gap:8px;transition:background .15s;}
+    .btn-new-chat:hover{background:#2a2a2a;}
+    .btn-new-chat-icon{font-size:16px;}
+    .history-list{flex:1;overflow-y:auto;padding:6px 6px;}
+    .history-list::-webkit-scrollbar{width:4px;}
+    .history-list::-webkit-scrollbar-thumb{background:#3a3a3a;border-radius:2px;}
+    .history-group-label{font-size:10px;font-weight:700;color:#8e8ea0;padding:10px 8px 4px;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;}
+    .history-item{padding:8px 10px;border-radius:8px;cursor:pointer;position:relative;transition:background .15s;margin-bottom:1px;}
+    .history-item:hover{background:#2a2a2a;}
+    .history-item.active{background:#343541;}
+    .history-item-title{font-size:13px;color:#ececec;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:22px;line-height:1.4;}
+    .history-item-meta{font-size:10px;color:#6e6e80;margin-top:1px;}
+    .history-del-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;color:#6e6e80;cursor:pointer;font-size:17px;line-height:1;padding:2px 5px;border-radius:4px;opacity:0;transition:opacity .15s;}
+    .history-item:hover .history-del-btn{opacity:1;}
+    .history-del-btn:hover{color:#ef4444;background:#3a2020;}
+    .history-empty{font-size:12px;color:#6e6e80;text-align:center;padding:24px 10px;line-height:1.6;}
+    /* ── Files header with Clear All ────────────────────────────── */
+    .files-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .files-header h3{margin-bottom:0;}
+    .btn-clear-all-files{padding:3px 8px;font-size:10px;background:#fce4ec;color:#c62828;border:none;border-radius:5px;cursor:pointer;font-weight:600;white-space:nowrap;transition:background .15s;}
+    .btn-clear-all-files:hover{background:#ef9a9a;}
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Header ──────────────────────────────────────────────────── -->
+  <div class="header">
+    <div class="brand"><span class="brand-icon">🤖</span> RAG System</div>
+    <div class="header-right">
+      <div class="user-chip">
+        <div class="avatar">A</div>
+        <div class="user-info-text">
+          <span class="user-name">Admin</span>
+          <span class="user-role">Engineering</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Company bar ─────────────────────────────────────────────── -->
+  <div class="company-bar">
+    <label>🏢 Company:</label>
+    <select class="company-select" id="company-select" onchange="onCompanyChange()">
+      <option value="">— Select or create a company —</option>
+    </select>
+    <button class="btn-new-company" onclick="openNewCompanyModal()">+ New Company</button>
+    <span id="company-badge" class="company-badge" style="display:none"></span>
+    <span id="index-badge" class="company-index-badge" style="display:none"></span>
+  </div>
+
+  <!-- ── Main ────────────────────────────────────────────────────── -->
+  <div class="main">
+
+    <!-- ── History Panel ─────────────────────────────────────────── -->
+    <div class="history-panel" id="history-panel">
+      <div class="history-top">
+        <button class="btn-new-chat" onclick="newChat()">
+          <span class="btn-new-chat-icon">✏</span> New Chat
+        </button>
+      </div>
+      <div class="history-list" id="history-list">
+        <div class="history-empty">No conversations yet.<br/>Start chatting to build history.</div>
+      </div>
+    </div>
+
+    <!-- ── Sidebar ────────────────────────────────────────────────── -->
+    <div class="sidebar">
+
+      <!-- Files list -->
+      <div class="sidebar-section">
+        <div class="files-header">
+          <h3>📁 Files <span id="file-count" style="font-size:11px;color:#aaa;text-transform:none;font-weight:400;"></span></h3>
+          <button class="btn-clear-all-files" onclick="clearAllFiles()" title="Delete all files at once">🗑 Clear All</button>
+        </div>
+        <div class="no-company-hint" id="hint-files">Select a company to manage files.</div>
+        <div class="files-list" id="files-list"></div>
+      </div>
+
+      <!-- Upload -->
+      <div class="sidebar-section">
+        <h3>⬆ Upload Document</h3>
+        <div class="no-company-hint" id="hint-upload">Select a company first.</div>
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('upload-input').click()"
+             ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <div class="drop-zone-text">📂 Click or drag &amp; drop file here</div>
+          <div class="drop-zone-sub" id="drop-zone-filename">Supported: PDF, Excel, CSV, Word, TXT, Markdown</div>
+          <div class="file-types-badge">
+            <span class="ft-badge">PDF</span><span class="ft-badge">XLSX</span>
+            <span class="ft-badge">CSV</span><span class="ft-badge">DOCX</span>
+            <span class="ft-badge">TXT</span><span class="ft-badge">MD</span>
+          </div>
+        </div>
+        <input type="file" id="upload-input" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc,.txt,.md,.markdown"
+               onchange="onFileSelected(event)"/>
+        <div class="upload-status" id="upload-status"></div>
+        <button class="btn-upload" id="btn-upload" onclick="uploadFile()" disabled>⬆ Upload &amp; Ingest</button>
+      </div>
+
+      <!-- Web scraping -->
+      <div class="sidebar-section">
+        <h3>🌐 Web Scraping</h3>
+        <div class="no-company-hint" id="hint-scrape">Select a company first.</div>
+        <input type="url" class="url-input" id="scrape-url" placeholder="https://example.com"/>
+        <div class="scrape-options">
+          <select id="scrape-mode">
+            <option value="auto">Auto</option>
+            <option value="advanced">Advanced (Selenium)</option>
+            <option value="fallback">Fallback (BS4)</option>
+          </select>
+          <span class="depth-label">Depth:</span>
+          <input type="number" id="scrape-depth" value="1" min="1" max="5"/>
+        </div>
+        <button class="btn-scrape" id="btn-scrape" onclick="scrapeUrl()">🔍 Scrape &amp; Ingest</button>
+      </div>
+
+      <!-- REST API ingest -->
+      <div class="sidebar-section">
+        <h3>🔌 REST API Ingest</h3>
+        <div class="no-company-hint" id="hint-api">Select a company first.</div>
+        <div class="api-form">
+          <input type="url" id="api-url" placeholder="https://api.example.com/data"/>
+          <select id="api-method">
+            <option value="GET">GET</option>
+            <option value="POST">POST</option>
+          </select>
+          <input type="text" id="api-json-path" placeholder="JSON path (e.g. results.items) — optional"/>
+          <input type="text" id="api-headers" placeholder='Headers JSON: {"Authorization":"Bearer ..."}' />
+          <button class="btn-api" id="btn-api" onclick="ingestApi()">🔌 Fetch &amp; Ingest</button>
+        </div>
+      </div>
+
+    </div><!-- sidebar -->
+
+    <!-- ── Chat ─────────────────────────────────────────────────── -->
+    <div class="chat-area">
+      <div class="chat-messages" id="chat-messages">
+        <div class="welcome-msg" id="welcome-msg">
+          <h2>Multi-Company RAG Chat</h2>
+          <p>Select a company from the top bar, upload your data (PDF, Excel, CSV, Word, URL, API), then ask questions. Each company has its own isolated vector index.</p>
+        </div>
+      </div>
+      <!-- Typing indicator -->
+      <div class="typing" id="typing-indicator">
+        <div class="msg assistant">
+          <div class="msg-avatar">🤖</div>
+          <div class="typing-dots"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+      <div class="input-bar">
+        <textarea id="chat-input" placeholder="Ask me anything about the selected company's data…"
+                  onkeydown="handleChatKeydown(event)"></textarea>
+        <button class="btn-clear" onclick="clearMemory()" title="Clear chat memory">↺</button>
+        <button class="btn-send" id="btn-send" onclick="sendMessage()">✓ Send</button>
+      </div>
+    </div>
+
+  </div><!-- main -->
+</div><!-- app -->
+
+<!-- Progress bar -->
+<div class="progress-bar" id="progress-bar"></div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- New company modal -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h2>🏢 New Company</h2>
+    <input type="text" id="new-company-name" placeholder="e.g. ManageEngine, ABC Corp…"
+           onkeydown="if(event.key==='Enter')submitNewCompany()"/>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-modal-ok" onclick="submitNewCompany()">Create</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────
+let selectedCompany = "";
+let selectedFile = null;
+let companies = [];     // [{name, collection, index, doc_count, sources}, ...]
+
+// ── Chat Session State ───────────────────────────────────────────────────
+let sessions = [];            // [{id, title, company, timestamp, messages}]
+let currentSessionId = null;  // id of currently displayed session (null = new unsaved chat)
+let currentMessages = [];     // [{role, text, sources}] for in-progress session
+
+// ── Init ─────────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  loadSessions();
+  renderHistory();
+  loadCompanies();
+});
+
+// ── Company management ────────────────────────────────────────────────────
+async function loadCompanies() {
+  try {
+    const resp = await fetch("/api/companies");
+    const data = await resp.json();
+    companies = data.companies || [];
+    renderCompanySelect();
+  } catch (e) {
+    console.error("loadCompanies failed", e);
+  }
+}
+
+function renderCompanySelect() {
+  const sel = document.getElementById("company-select");
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">— Select or create a company —</option>';
+  for (const c of companies) {
+    const opt = document.createElement("option");
+    opt.value = c.name;
+    opt.textContent = `${c.name}  (Index ${c.index})`;
+    sel.appendChild(opt);
+  }
+  if (prev && companies.find(c => c.name === prev)) {
+    sel.value = prev;
+  }
+  onCompanyChange();
+}
+
+function onCompanyChange() {
+  const sel = document.getElementById("company-select");
+  selectedCompany = sel.value;
+  const rec = companies.find(c => c.name === selectedCompany);
+
+  const badge = document.getElementById("company-badge");
+  const idxBadge = document.getElementById("index-badge");
+  if (rec) {
+    badge.textContent = rec.name;
+    badge.style.display = "inline-block";
+    idxBadge.textContent = `Collection Index: ${rec.index}`;
+    idxBadge.style.display = "inline-block";
+  } else {
+    badge.style.display = "none";
+    idxBadge.style.display = "none";
+  }
+
+  // Show/hide hints
+  const hints = ["hint-files","hint-upload","hint-scrape","hint-api"];
+  hints.forEach(id => {
+    document.getElementById(id).classList.toggle("show", !selectedCompany);
+  });
+
+  // Enable/disable buttons
+  document.getElementById("btn-scrape").disabled = !selectedCompany;
+  document.getElementById("btn-api").disabled = !selectedCompany;
+  updateUploadButton();
+
+  if (selectedCompany) loadFiles();
+}
+
+function openNewCompanyModal() {
+  document.getElementById("modal-bg").classList.add("open");
+  setTimeout(() => document.getElementById("new-company-name").focus(), 100);
+}
+function closeModal() {
+  document.getElementById("modal-bg").classList.remove("open");
+  document.getElementById("new-company-name").value = "";
+}
+
+async function submitNewCompany() {
+  const name = document.getElementById("new-company-name").value.trim();
+  if (!name) { showToast("Company name is required","error"); return; }
+  try {
+    const resp = await fetch("/api/companies", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({name})
+    });
+    const data = await resp.json();
+    if (data.error) { showToast(data.error,"error"); return; }
+    closeModal();
+    await loadCompanies();
+    document.getElementById("company-select").value = name;
+    onCompanyChange();
+    showToast(`Company "${name}" created (Index ${data.index})`, "success");
+  } catch (e) {
+    showToast("Failed to create company", "error");
+  }
+}
+
+// ── Files ────────────────────────────────────────────────────────────────
+async function loadFiles() {
+  if (!selectedCompany) return;
+  try {
+    const resp = await fetch(`/files?company=${encodeURIComponent(selectedCompany)}`);
+    const data = await resp.json();
+    const list = document.getElementById("files-list");
+    const cnt = document.getElementById("file-count");
+    const files = data.files || [];
+    cnt.textContent = files.length ? `(${files.length})` : "";
+    list.innerHTML = "";
+    if (!files.length) {
+      list.innerHTML = '<div style="font-size:12px;color:#bbb;text-align:center;padding:8px 0">No files yet</div>';
+      return;
+    }
+    for (const f of files) {
+      const icon = extIcon(f.ext);
+      const div = document.createElement("div");
+      div.className = "file-item";
+      div.innerHTML = `
+        <div class="file-item-left">
+          <span class="file-icon">${icon}</span>
+          <div>
+            <div class="file-name" title="${f.name}">${f.name}</div>
+            <div class="file-size">${f.size}</div>
+          </div>
+        </div>
+        <div class="file-actions">
+          <button class="btn-xs btn-xs-view" onclick="viewFile('${f.name}')">View</button>
+          <button class="btn-xs btn-xs-del" onclick="deleteFile('${f.name}', this)">Delete</button>
+        </div>`;
+      list.appendChild(div);
+    }
+  } catch (e) {
+    console.error("loadFiles failed", e);
+  }
+}
+
+function extIcon(ext) {
+  const icons = {pdf:"📄",xlsx:"📊",xls:"📊",csv:"📋",docx:"📝",doc:"📝",txt:"📃",md:"📃",markdown:"📃"};
+  return icons[ext] || "📁";
+}
+
+function viewFile(name) {
+  window.open(`/download/${encodeURIComponent(name)}`, "_blank");
+}
+
+async function deleteFile(name, btn) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  btn.disabled = true;
+  try {
+    await fetch(`/files/${encodeURIComponent(name)}`, {method:"DELETE"});
+    loadFiles();
+    showToast("File deleted", "info");
+  } catch (e) {
+    showToast("Delete failed", "error");
+    btn.disabled = false;
+  }
+}
+
+// ── Upload ────────────────────────────────────────────────────────────────
+function handleDragOver(e) {
+  e.preventDefault();
+  document.getElementById("drop-zone").classList.add("drag-over");
+}
+function handleDragLeave(e) {
+  document.getElementById("drop-zone").classList.remove("drag-over");
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById("drop-zone").classList.remove("drag-over");
+  const file = e.dataTransfer.files[0];
+  if (file) applyFile(file);
+}
+function onFileSelected(e) {
+  if (e.target.files[0]) applyFile(e.target.files[0]);
+}
+function applyFile(file) {
+  selectedFile = file;
+  document.getElementById("drop-zone-filename").textContent = `📎 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+  updateUploadButton();
+}
+function updateUploadButton() {
+  document.getElementById("btn-upload").disabled = !(selectedCompany && selectedFile);
+}
+
+async function uploadFile() {
+  if (!selectedCompany || !selectedFile) return;
+  const btn = document.getElementById("btn-upload");
+  const status = document.getElementById("upload-status");
+  btn.disabled = true;
+  setProgress(10);
+  status.textContent = "Uploading…";
+
+  const fd = new FormData();
+  fd.append("file", selectedFile);
+  fd.append("company", selectedCompany);
+
+  try {
+    setProgress(30);
+    const resp = await fetch("/upload", {method:"POST", body:fd});
+    setProgress(80);
+    const data = await resp.json();
+    setProgress(100);
+    if (data.error) {
+      showToast(data.error, "error");
+      status.textContent = "Upload failed.";
+    } else {
+      showToast(`✅ "${data.filename}" ingested: ${data.chunks_created} chunks`, "success");
+      status.textContent = `${data.chunks_created} chunks stored in "${selectedCompany}" index.`;
+      selectedFile = null;
+      document.getElementById("upload-input").value = "";
+      document.getElementById("drop-zone-filename").textContent = "Supported: PDF, Excel, CSV, Word, TXT, Markdown";
+      loadFiles();
+      loadCompanies();
+    }
+  } catch (e) {
+    showToast("Upload failed: " + e.message, "error");
+    status.textContent = "Error.";
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => setProgress(0), 800);
+  }
+}
+
+// ── Scrape ────────────────────────────────────────────────────────────────
+async function scrapeUrl() {
+  if (!selectedCompany) { showToast("Select a company first","error"); return; }
+  const url = document.getElementById("scrape-url").value.trim();
+  if (!url) { showToast("Enter a URL","error"); return; }
+  const mode = document.getElementById("scrape-mode").value;
+  const depth = parseInt(document.getElementById("scrape-depth").value) || 1;
+  const btn = document.getElementById("btn-scrape");
+  btn.disabled = true;
+  setProgress(15);
+  showToast("Scraping URL…", "info");
+  try {
+    const resp = await fetch("/scrape", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({company:selectedCompany, url, mode, depth})
+    });
+    setProgress(85);
+    const data = await resp.json();
+    setProgress(100);
+    if (data.error) {
+      showToast(data.error, "error");
+    } else {
+      showToast(`✅ Scraped ${data.total_documents} docs → ${data.chunks_created} chunks in "${selectedCompany}"`, "success");
+      document.getElementById("scrape-url").value = "";
+      loadFiles();
+      loadCompanies();
+    }
+  } catch (e) {
+    showToast("Scrape failed: " + e.message, "error");
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => setProgress(0), 800);
+  }
+}
+
+// ── API ingest ────────────────────────────────────────────────────────────
+async function ingestApi() {
+  if (!selectedCompany) { showToast("Select a company first","error"); return; }
+  const apiUrl = document.getElementById("api-url").value.trim();
+  if (!apiUrl) { showToast("Enter an API URL","error"); return; }
+  const method = document.getElementById("api-method").value;
+  const jsonPath = document.getElementById("api-json-path").value.trim();
+  let headers = {};
+  try {
+    const hv = document.getElementById("api-headers").value.trim();
+    if (hv) headers = JSON.parse(hv);
+  } catch(e) { showToast("Invalid headers JSON","error"); return; }
+
+  const btn = document.getElementById("btn-api");
+  btn.disabled = true;
+  setProgress(15);
+  showToast("Fetching API data…","info");
+  try {
+    const body = {company:selectedCompany, url:apiUrl, method, headers};
+    if (jsonPath) body.json_path = jsonPath;
+    const resp = await fetch("/ingest-api", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(body)
+    });
+    setProgress(85);
+    const data = await resp.json();
+    setProgress(100);
+    if (data.error) {
+      showToast(data.error,"error");
+    } else {
+      showToast(`✅ API: ${data.records_fetched} records → ${data.chunks_created} chunks in "${selectedCompany}"`, "success");
+      document.getElementById("api-url").value = "";
+      loadCompanies();
+    }
+  } catch(e) {
+    showToast("API ingest failed: " + e.message, "error");
+  } finally {
+    btn.disabled = false;
+    setTimeout(() => setProgress(0), 800);
+  }
+}
+
+// ── Chat ──────────────────────────────────────────────────────────────────
+function handleChatKeydown(e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+async function sendMessage() {
+  if (!selectedCompany) { showToast("Select a company first","error"); return; }
+  const input = document.getElementById("chat-input");
+  const question = input.value.trim();
+  if (!question) return;
+
+  document.getElementById("welcome-msg").style.display = "none";
+  appendMessage("user", question);
+  input.value = "";
+  input.style.height = "44px";
+
+  const typing = document.getElementById("typing-indicator");
+  typing.classList.add("visible");
+  scrollChat();
+  document.getElementById("btn-send").disabled = true;
+
+  // Create the assistant bubble immediately (empty, with cursor)
+  const { bubble, sourcesEl, wrapper } = createStreamBubble();
+
+  let firstToken = true;
+  let rawText = "";
+
+  try {
+    const resp = await fetch("/ask-stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ company: selectedCompany, question }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({error: "Unknown error"}));
+      typing.classList.remove("visible");
+      bubble.classList.remove("stream-cursor");
+      bubble.innerHTML = `⚠ ${escHtml(err.error || "Request failed")}`;
+      return;
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+
+      // Process complete SSE lines
+      const lines = buffer.split("\n");
+      buffer = lines.pop(); // keep incomplete last line
+
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const jsonStr = line.slice(5).trim();
+        if (!jsonStr) continue;
+
+        let event;
+        try { event = JSON.parse(jsonStr); } catch { continue; }
+
+        if (event.error) {
+          bubble.classList.remove("stream-cursor");
+          bubble.innerHTML = `⚠ ${escHtml(event.error)}`;
+          break;
+        }
+
+        if (event.token !== undefined) {
+          // Hide typing indicator on first real token
+          if (firstToken) {
+            typing.classList.remove("visible");
+            firstToken = false;
+          }
+          rawText += event.token;
+          bubble.innerHTML = renderMarkdown(rawText);
+          scrollChat();
+        }
+
+        if (event.done) {
+          bubble.classList.remove("stream-cursor");
+          bubble.innerHTML = renderMarkdown(rawText);
+          if (event.sources && event.sources.length) {
+            sourcesEl.innerHTML = "<b>Sources:</b> " +
+              event.sources.map(s =>
+                `<span title="${escHtml(s)}">${escHtml(s.split("/").pop().slice(0,42))}</span>`
+              ).join("");
+            sourcesEl.style.display = "block";
+          }
+          // Track assistant message and persist session
+          currentMessages.push({role:"assistant", text:rawText, sources:event.sources||[]});
+          saveCurrentSession();
+          scrollChat();
+        }
+      }
+    }
+
+    // If stream ended without a done event
+    if (firstToken) typing.classList.remove("visible");
+    bubble.classList.remove("stream-cursor");
+    if (!rawText) bubble.innerHTML = "⚠ No response received.";
+
+  } catch (e) {
+    typing.classList.remove("visible");
+    bubble.classList.remove("stream-cursor");
+    bubble.innerHTML = "⚠ Request failed: " + escHtml(e.message);
+  } finally {
+    document.getElementById("btn-send").disabled = false;
+    setTimeout(scrollChat, 50);
+  }
+}
+
+/** Create an empty streaming assistant bubble and insert it into the chat. */
+function createStreamBubble() {
+  const container = document.getElementById("chat-messages");
+  const wrapper = document.createElement("div");
+  wrapper.className = "msg assistant";
+
+  const bubble = document.createElement("div");
+  bubble.className = "msg-bubble stream-cursor";
+
+  const sourcesEl = document.createElement("div");
+  sourcesEl.className = "msg-sources";
+  sourcesEl.style.display = "none";
+
+  const inner = document.createElement("div");
+  inner.appendChild(bubble);
+  inner.appendChild(sourcesEl);
+
+  wrapper.innerHTML = `<div class="msg-avatar">🤖</div>`;
+  wrapper.appendChild(inner);
+  container.appendChild(wrapper);
+  scrollChat();
+  return { bubble, sourcesEl, wrapper };
+}
+
+/** Render a message into DOM without modifying currentMessages (used for history restore). */
+function appendMessageDirect(role, text, sources) {
+  const container = document.getElementById("chat-messages");
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  const avatarTxt = role === "user" ? "U" : "🤖";
+  let sourcesHtml = "";
+  if (sources && sources.length) {
+    sourcesHtml = `<div class="msg-sources"><b>Sources:</b> ${sources.map(s=>`<span title="${escHtml(s)}">${escHtml(s.split("/").pop().slice(0,40))}</span>`).join("")}</div>`;
+  }
+  div.innerHTML = `
+    <div class="msg-avatar">${avatarTxt}</div>
+    <div>
+      <div class="msg-bubble">${renderMarkdown(text)}</div>
+      ${sourcesHtml}
+    </div>`;
+  container.appendChild(div);
+}
+
+/** Append a finished message and track it in currentMessages (used for live messages). */
+function appendMessage(role, text, sources) {
+  currentMessages.push({role, text, sources: sources || []});
+  appendMessageDirect(role, text, sources);
+  scrollChat();
+}
+
+/**
+ * Minimal markdown renderer:
+ * - **bold** -> <strong>
+ * - \n -> <br>
+ * - numbered lists
+ */
+function renderMarkdown(text) {
+  let html = escHtml(text);
+  // Bold: **text**
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // Italic: *text*
+  html = html.replace(/\*([^*\n]+?)\*/g, "<em>$1</em>");
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, "<code style='background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px'>$1</code>");
+  // Newlines
+  html = html.replace(/\n/g, "<br/>");
+  return html;
+}
+
+function scrollChat() {
+  const c = document.getElementById("chat-messages");
+  c.scrollTop = c.scrollHeight;
+}
+
+async function clearMemory() {
+  if (!selectedCompany) return;
+  try {
+    await fetch("/clear-memory",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({company:selectedCompany})});
+    currentSessionId = null;
+    currentMessages = [];
+    resetChatUI();
+    renderHistory();
+    showToast("Memory cleared","info");
+  } catch(e) {}
+}
+
+// ── Utilities ─────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return (str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+function showToast(msg, type="info") {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), 4000);
+}
+
+function setProgress(pct) {
+  const bar = document.getElementById("progress-bar");
+  bar.style.width = pct + "%";
+  if (pct <= 0 || pct >= 100) setTimeout(()=>{ bar.style.width="0"; }, 600);
+}
+
+// ── Chat UI helpers ───────────────────────────────────────────────────────
+/** Clear chat messages but preserve + show welcome-msg element. */
+function resetChatUI() {
+  const c = document.getElementById("chat-messages");
+  const w = document.getElementById("welcome-msg");
+  // Detach welcome-msg, clear everything, re-attach it
+  if (w && c.contains(w)) c.removeChild(w);
+  c.innerHTML = "";
+  if (w) { c.appendChild(w); w.style.display = ""; }
+}
+
+// ── Session / Chat History ────────────────────────────────────────────────
+function loadSessions() {
+  try { sessions = JSON.parse(localStorage.getItem("rag_sessions") || "[]"); }
+  catch { sessions = []; }
+}
+
+function saveSessions() {
+  localStorage.setItem("rag_sessions", JSON.stringify(sessions));
+}
+
+/** Start a fresh conversation, saving the current one to history first. */
+function newChat() {
+  saveCurrentSession();
+  currentSessionId = null;
+  currentMessages = [];
+  resetChatUI();
+  if (selectedCompany) {
+    fetch("/clear-memory",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({company:selectedCompany})}).catch(()=>{});
+  }
+  renderHistory();
+}
+
+/** Persist the current messages to localStorage. */
+function saveCurrentSession() {
+  if (!currentMessages.length) return;
+  const title = currentMessages[0].text.slice(0, 60) || "Chat";
+  if (currentSessionId) {
+    const idx = sessions.findIndex(s => s.id === currentSessionId);
+    if (idx >= 0) { sessions[idx].messages = [...currentMessages]; sessions[idx].title = title; }
+  } else {
+    currentSessionId = Date.now().toString();
+    sessions.unshift({
+      id: currentSessionId,
+      title,
+      company: selectedCompany,
+      timestamp: new Date().toISOString(),
+      messages: [...currentMessages]
+    });
+  }
+  saveSessions();
+  renderHistory();
+}
+
+/** Load a past session into the chat UI. */
+function loadSession(id) {
+  saveCurrentSession();
+  const session = sessions.find(s => s.id === id);
+  if (!session) return;
+  currentSessionId = id;
+  currentMessages = [...session.messages];
+  // Switch company if needed
+  if (session.company && session.company !== selectedCompany) {
+    document.getElementById("company-select").value = session.company;
+    onCompanyChange();
+  }
+  resetChatUI();
+  const w = document.getElementById("welcome-msg");
+  if (w) w.style.display = "none";
+  for (const msg of currentMessages) appendMessageDirect(msg.role, msg.text, msg.sources);
+  renderHistory();
+  scrollChat();
+}
+
+/** Delete a session from history. */
+function deleteSessionItem(id, e) {
+  e.stopPropagation();
+  sessions = sessions.filter(s => s.id !== id);
+  saveSessions();
+  if (id === currentSessionId) {
+    currentSessionId = null;
+    currentMessages = [];
+    resetChatUI();
+  }
+  renderHistory();
+}
+
+/** Render the history panel list grouped by date. */
+function renderHistory() {
+  const list = document.getElementById("history-list");
+  if (!list) return;
+  list.innerHTML = "";
+  if (!sessions.length) {
+    list.innerHTML = '<div class="history-empty">No conversations yet.<br/>Start chatting to build history.</div>';
+    return;
+  }
+  const now = new Date();
+  const todayStr = now.toDateString();
+  const yest = new Date(now); yest.setDate(now.getDate() - 1);
+  const yestStr = yest.toDateString();
+  const last7 = new Date(now); last7.setDate(now.getDate() - 7);
+  function getGroup(ts) {
+    const d = new Date(ts);
+    if (d.toDateString() === todayStr) return "Today";
+    if (d.toDateString() === yestStr) return "Yesterday";
+    if (d >= last7) return "Previous 7 Days";
+    return d.toLocaleDateString("en-US", {month:"short", year:"numeric"});
+  }
+  const grouped = new Map();
+  for (const s of sessions) {
+    const g = getGroup(s.timestamp);
+    if (!grouped.has(g)) grouped.set(g, []);
+    grouped.get(g).push(s);
+  }
+  for (const [group, items] of grouped) {
+    const lbl = document.createElement("div");
+    lbl.className = "history-group-label";
+    lbl.textContent = group;
+    list.appendChild(lbl);
+    for (const s of items) {
+      const item = document.createElement("div");
+      item.className = "history-item" + (s.id === currentSessionId ? " active" : "");
+      item.onclick = () => loadSession(s.id);
+      item.innerHTML =
+        `<div class="history-item-title" title="${escHtml(s.title)}">${escHtml(s.title)}</div>` +
+        `<div class="history-item-meta">${escHtml(s.company || "")}</div>` +
+        `<button class="history-del-btn" onclick="deleteSessionItem('${escHtml(s.id)}',event)" title="Delete">×</button>`;
+      list.appendChild(item);
+    }
+  }
+}
+
+// ── Clear All Files ───────────────────────────────────────────────────────
+async function clearAllFiles() {
+  if (!selectedCompany) { showToast("Select a company first","error"); return; }
+  const countEl = document.getElementById("file-count");
+  const countText = countEl ? countEl.textContent.replace(/[^0-9]/g,"") : "";
+  const label = countText ? `${countText} file(s)` : "all files";
+  if (!confirm(`Delete ${label} for "${selectedCompany}"?\nThis removes the files from disk. The indexed data in Qdrant is NOT removed — re-ingest to refresh the index.`)) return;
+  try {
+    const resp = await fetch(`/files-all`, {method:"DELETE"});
+    const data = await resp.json();
+    if (data.error) { showToast(data.error,"error"); return; }
+    showToast(`✅ Deleted ${data.deleted} file(s)`, "success");
+    loadFiles();
+    loadCompanies();
+  } catch(e) {
+    showToast("Failed to clear files: " + e.message, "error");
+  }
+}
+</script>
+</body>
+</html>

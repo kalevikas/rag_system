@@ -1,0 +1,55 @@
+{
+  "448b82ede422": {
+    "id": "448b82ede422",
+    "title": "who is Vikas?",
+    "created_at": "2026-03-23T09:11:12.885322",
+    "updated_at": "2026-03-23T09:11:55.451864",
+    "messages": [
+      {
+        "role": "user",
+        "content": "who is Vikas?",
+        "sources": [],
+        "not_found": false,
+        "ts": "2026-03-23T09:11:51.318426"
+      },
+      {
+        "role": "assistant",
+        "content": "❌ **Not Found in Documents**\n\nI couldn't find relevant information about this in the uploaded documents. Please make sure the relevant documents have been uploaded and indexed for this user.",
+        "sources": [],
+        "not_found": true,
+        "ts": "2026-03-23T09:11:55.451864"
+      }
+    ]
+  },
+  "6247dd48c5f9": {
+    "id": "6247dd48c5f9",
+    "title": "New Chat",
+    "created_at": "2026-03-23T09:12:54.726630",
+    "updated_at": "2026-03-23T09:12:54.726630",
+    "messages": []
+  },
+  "91359a24f552": {
+    "id": "91359a24f552",
+    "title": "How to fix high cpu usage error?",
+    "created_at": "2026-03-23T09:14:14.551802",
+    "updated_at": "2026-03-23T09:14:47.578168",
+    "messages": [
+      {
+        "role": "user",
+        "content": "How to fix high cpu usage error?",
+        "sources": [],
+        "not_found": false,
+        "ts": "2026-03-23T09:14:39.195276"
+      },
+      {
+        "role": "assistant",
+        "content": "## Fixing High CPU Usage Error\n\nTo address the **high CPU utilization error** encountered after upgrading to version **15100**, follow these steps:\n\n1. **Upgrade to Build 15110**:\n   - The high CPU usage issue was fixed in the **15110 build**. Ensure that you upgrade to this version.\n\n2. **Zia Parser Feature**:\n   - In the **15100 build**, the **Zia Parser feature** was enabled by default in the IT helpdesk portal, which caused high CPU usage during service startup due to data training.\n   - In the **15110 build**, training during service startup will only occur for portals where the Zia parser feature is enabled.\n\n3. **Post-Upgrade**:\n   - After upgrading, the training will occur only once, and the trained data will be stored in a file. Subsequent service startups will not trigger training due to this stored data.\n\n4. **If Issues Persist**:\n   - If you continue to experience high CPU usage after the upgrade, consider disabling the Zia parser feature by executing the following update query:\n     ```sql\n     update ai_module set action_enabled=false where actionname='parser';\n     ```\n   - After executing the query, restart the service.\n\n📚 **Sources:** \n- [Document 1]\n- [Document 2]",
+        "sources": [
+          "D:\\rag\\data\\pdf_files\\tmp8zo9rev3.pdf"
+        ],
+        "not_found": false,
+        "ts": "2026-03-23T09:14:47.578168"
+      }
+    ]
+  }
+}
