@@ -67,8 +67,10 @@ __pycache__/
 logs/
 data/pdf_files/
 .env
-config/config.yaml   # optional — keep your config private
 ```
+
+Keep `config/config.yaml` in the repo as a non-secret baseline config.
+Store sensitive values only in Streamlit secrets/env vars.
 
 ---
 

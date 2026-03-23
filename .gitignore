@@ -50,8 +50,7 @@ data/ingest_manifest.json
 data/*.pdf
 data/*.html
 
-# Config with secrets
-config/config.yaml
+# Config: keep base config in repo; put secrets in env/.streamlit/secrets.toml
 
 # Model cache
 .cache/

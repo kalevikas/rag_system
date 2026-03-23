@@ -3,7 +3,6 @@ RAG Pipeline Orchestrator - Multi-Company Edition
 Each company has its own Qdrant collection; retrieval is scoped to one company.
 """
 import os
-import yaml
 import logging
 from typing import Any, Dict, Generator, List, Optional
 
@@ -17,14 +16,15 @@ from .reranker import Reranker, RerankerPipeline
 from .llm_handler import LLMHandler, PromptTemplates
 from .chat_memory import ConversationMemory
 from .company_manager import get_company_manager
+from config.config import get_config
 
 logger = logging.getLogger(__name__)
 
 
 def _load_config() -> Dict:
-    cfg_path = os.path.join(os.path.dirname(__file__), "..", "config", "config.yaml")
-    with open(cfg_path, "r") as f:
-        return yaml.safe_load(f)
+    # Use central config manager so cloud deployments work even if config.yaml
+    # is absent (defaults + env vars are handled there).
+    return get_config().data
 
 
 class CompanyRAGPipeline:

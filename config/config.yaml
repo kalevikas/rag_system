@@ -1,0 +1,51 @@
+# Example config for manageengine_rag
+log_level: INFO
+
+ingest:
+  pdf_dir: data/pdf_files
+
+chunking:
+  recursive:
+    chunk_size: 1000
+    chunk_overlap: 200
+    separators: ["\n\n", "\n", ". ", " ", ""]
+
+embedding:
+  model_name: BAAI/bge-large-en-v1.5
+  batch_size: 32
+  normalize: true
+
+vectorstore:
+  collection_name: pdf_documents
+  host: localhost
+  port: 6333
+  vector_size: 1024
+  distance_metric: Cosine
+  use_cloud: false
+  cloud_url: null
+  api_key: null
+
+llm:
+  model: gpt-4o-mini
+  temperature: 0.1
+  max_tokens: 2048
+
+conversation:
+  enabled: true
+  memory_type: buffer
+  max_history: 10
+
+reranking:
+  enabled: true
+  model_name: cross-encoder/ms-marco-MiniLM-L-6-v2
+  top_k: 5
+
+hybrid_search:
+  dense_weight: 0.7
+  sparse_weight: 0.3
+  top_k: 10
+
+# API key is read from env var OPENAI_API_KEY (set via .env or Streamlit secrets)
+# Never hard-code secrets here.
+openai:
+  api_key: null
